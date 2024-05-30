@@ -1,5 +1,7 @@
 CC=clang
 CFLAGS=-g -Wall
+IFLAGS=-I/usr/local/include/SDL3
+LFLAGS=-L/usr/local/lib -lSDL3
 BIN=prog
 BINDIR=bin
 SRC=src
@@ -16,11 +18,11 @@ all: $(BIN)
 
 $(BIN): $(OBJS)
 	mkdir -p $(BINDIR)
-	$(CC) $(CFLAGS) $^ -o $(BINDIR)/$@
+	$(CC) $(CFLAGS) $(IFLAGS) $(LFLAGS) $^ -o $(BINDIR)/$@
 
 $(OBJ)/%.o: $(SRC)/%.c
 	mkdir -p $(OBJ)
-	$(CC) $(CFLAGS) -c $< -o $@
+	$(CC) $(CFLAGS) $(IFLAGS) -c $< -o $@
 
 $(TEST)/bin/%: $(TEST)/%.c
 	mkdir -p $(TEST)/bin
