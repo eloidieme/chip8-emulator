@@ -8,5 +8,7 @@
 #define FONT_ADDRESS 0x050
 #define WORD_SIZE 8
 #define NIBBLE_SIZE 4
+#define SCREEN_H 32
+#define SCREEN_W 64
 
 #endif

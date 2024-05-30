@@ -21,7 +21,7 @@ uint16_t fetch(Chip8* chipPtr) {
 	return instruction;
 }
 
-void decodeExecute(uint16_t instruction, Chip8* chipPtr, SDL_Renderer* renderer) {
+void decodeExecute(uint16_t instruction, Chip8* chipPtr, SDL_Renderer* renderer, SDL_Texture* texture) {
 	uint8_t nibbles[NIBBLE_SIZE] = {
 		[0] = (instruction | 0xf000),
 		[1] = (instruction | 0x0f00),
@@ -77,6 +77,34 @@ void decodeExecute(uint16_t instruction, Chip8* chipPtr, SDL_Renderer* renderer)
 			break;
 		case 0xD:
             // 0xDXYN: Display
+			uint8_t x = chipPtr->regs[nibbles[1]] & 63;
+			uint8_t y = chipPtr->regs[nibbles[2]] & 31;
+			chipPtr->regs[0xf] = 0x0;
+			for (size_t k = 0; k < nibbles[3]; ++k) {
+				if (y >= 32) {
+					break;
+				}
+				uint8_t spriteByte = chipPtr->ram[chipPtr->index + k];
+				uint8_t screenByte = 0; // TO-DO: get screen byte
+				for (int8_t i = 15; i > -1; --i) {
+					if (x >= 64) {
+						break;
+					}
+					uint8_t spriteBit = spriteByte | i;
+					uint8_t screenBit = screenByte | i;
+					if (spriteBit & screenBit) {
+						// TO-DO: turn off pixel - setPixel(x, y, 0)
+						setPixel(renderer, texture, x, y, 0x0);
+						chipPtr->regs[0xf] = 0x0;
+					}
+					if (spriteBit & ~screenBit) {
+						// TO-DO: draw pixel at x, y - setPixel(x, y, 255)
+						setPixel(renderer, texture, x, y, 0xFF);
+					}
+					x += 1;
+				}
+				y += 1;
+			}
 			break;
 		case 0xE:
 			break;

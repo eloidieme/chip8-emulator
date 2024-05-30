@@ -20,11 +20,11 @@ int main(int argc, char* argv[argc+1]) {
 		return 1;
 	}
 
-	SDL_Window* window = SDL_CreateWindow("CHIP-8 Emulator", 64, 32, 0);
+	SDL_Window* window = SDL_CreateWindow("CHIP-8 Emulator", SCREEN_W, SCREEN_H, 0);
 	if (window == NULL) {
 		printf("SDL_CreateWindow Error: %s\n", SDL_GetError());
 		SDL_Quit();
-		return 1;
+		return EXIT_FAILURE;
 	}
 
 	SDL_Renderer* renderer = SDL_CreateRenderer(window, NULL, SDL_RENDERER_ACCELERATED | SDL_RENDERER_PRESENTVSYNC);
@@ -32,9 +32,15 @@ int main(int argc, char* argv[argc+1]) {
 		SDL_DestroyWindow(window);
 		printf("SDL_CreateRenderer Error: %s\n", SDL_GetError());
 		SDL_Quit();
-		return 1;
+		return EXIT_FAILURE;
 	}
 
+	SDL_Texture* texture = SDL_CreateTexture(renderer, SDL_PIXELFORMAT_RGB332, SDL_TEXTUREACCESS_STREAMING, SCREEN_W, SCREEN_H);
+	if (texture == NULL) {
+		printf("SDL_CreateTexture Error: %s\n", SDL_GetError());
+		SDL_Quit();
+		return EXIT_FAILURE;
+	}
 	/* Timing Initialization */
 	double clockRate = 1.0;
 	struct timespec start, end;
@@ -64,7 +70,7 @@ int main(int argc, char* argv[argc+1]) {
 		/* Fetch-Execute-Decode */
 		inst = fetch(&chip);
 		clock_gettime(CLOCK_MONOTONIC_RAW, &start);
-		decodeExecute(inst, &chip, renderer);
+		decodeExecute(inst, &chip, renderer, texture);
 		clock_gettime(CLOCK_MONOTONIC_RAW, &end);
 
 		printf("Instruction:\t%#.4x\n", inst);

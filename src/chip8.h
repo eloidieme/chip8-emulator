@@ -7,6 +7,7 @@
 
 #include "./macros.h"
 #include "./stack.h"
+#include "./display.h"
 
 typedef struct Chip8 Chip8;
 struct Chip8 {
@@ -26,6 +27,6 @@ struct Chip8 {
 
 Chip8 initChip(uint16_t startingAddress);
 uint16_t fetch(Chip8* chipPtr);
-void decodeExecute(uint16_t instruction, Chip8* chipPtr, SDL_Renderer* renderer); 
+void decodeExecute(uint16_t instruction, Chip8* chipPtr, SDL_Renderer* renderer, SDL_Texture* texture); 
 
 #endif
