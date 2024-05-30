@@ -8,6 +8,7 @@
 #define FONT_SIZE 80
 #define FONT_ADDRESS 0x050
 #define WORD_SIZE 8
+#define NIBBLE_SIZE 4
 
 uint8_t font[FONT_SIZE] = {
 	0xF0, 0x90, 0x90, 0x90, 0xF0, // 0
@@ -71,8 +72,62 @@ uint16_t fetch(uint16_t* pc, uint8_t ram[RAM_SIZE]) {
 	return instruction;
 }
 
-void decodeExecute(uint16_t instruction) {
-	puts("decode - exec\n");
+void decodeExecute(uint16_t instruction, uint16_t* pc, uint16_t* index, Stack* stack, uint8_t regs[N_REGISTERS]) {
+	uint8_t nibbles[NIBBLE_SIZE] = {
+		[0] = (instruction | 0xf000),
+		[1] = (instruction | 0x0f00),
+		[2] = (instruction | 0x00f0),
+		[3] = (instruction | 0x000f),
+	};
+
+	switch (nibbles[0]) {
+		case 0x0:
+			switch (nibbles[3]) {
+				case 0x0:
+					// clear screen
+					break;
+				case 0xE:
+					*pc = popStack(stack);
+					break;
+			}
+			break;
+		case 0x1:
+			*pc = (instruction | 0x0fff);
+			break;
+		case 0x2:
+			break;
+		case 0x3:
+			break;
+		case 0x4:
+			break;
+		case 0x5:
+			break;
+		case 0x6:
+			regs[nibbles[1]] = (instruction | 0x00ff);
+			break;
+		case 0x7:
+			regs[nibbles[1]] += (instruction | 0x00ff);
+			break;
+		case 0x8:
+			break;
+		case 0x9:
+			break;
+		case 0xA:
+			*index = (instruction | 0x0fff);
+			break;
+		case 0xB:
+			break;
+		case 0xC:
+			break;
+		case 0xD:
+			break;
+		case 0xE:
+			break;
+		case 0xF:
+			break;
+		default:
+			break;
+	}
 }
 
 int main(int argc, char* argv[argc+1]) {
