@@ -129,13 +129,15 @@ void decodeExecute(uint16_t instruction, Chip8* chipPtr, SDL_Renderer* renderer,
 					break;
 				case 0x4:
 					// 0x8XY4: VX is set to VX + VY
-					uint16_t result = (chipPtr->regs[nibbles[1]] + chipPtr->regs[nibbles[2]]);
-					if (result > 0xFF) {
-						chipPtr->regs[0xF] = 0x1; 
-					} else {
-						chipPtr->regs[0xF] = 0x0;
+					{
+						uint16_t result = (chipPtr->regs[nibbles[1]] + chipPtr->regs[nibbles[2]]);
+						if (result > 0xFF) {
+							chipPtr->regs[0xF] = 0x1; 
+						} else {
+							chipPtr->regs[0xF] = 0x0;
+						}
+						chipPtr->regs[nibbles[1]] = result % 0xFF;
 					}
-					chipPtr->regs[nibbles[1]] = result % 0xFF; 
 					break;
 				case 0x5:
 					// 0x8XY5: VX is set to VX - VY
@@ -166,12 +168,14 @@ void decodeExecute(uint16_t instruction, Chip8* chipPtr, SDL_Renderer* renderer,
 					break;
 				case 0xE:
 					// 0x8XYE: Shift left
-					if (ORIGINAL_SHIFT) {
-						chipPtr->regs[nibbles[1]] = chipPtr->regs[nibbles[2]];
+					{
+						if (ORIGINAL_SHIFT) {
+							chipPtr->regs[nibbles[1]] = chipPtr->regs[nibbles[2]];
+						}
+						uint8_t shiftedOut = (chipPtr->regs[nibbles[1]] & 0x80) >> 7;
+						chipPtr->regs[nibbles[1]] <<= 1;
+						chipPtr->regs[0xF] = shiftedOut;
 					}
-					uint8_t shiftedOut = (chipPtr->regs[nibbles[1]] & 0x80) >> 7;
-					chipPtr->regs[nibbles[1]] <<= 1;
-					chipPtr->regs[0xF] = shiftedOut;
 					break;
 			}
 			break;
@@ -195,8 +199,10 @@ void decodeExecute(uint16_t instruction, Chip8* chipPtr, SDL_Renderer* renderer,
 			break;
 		case 0xC:
 			// 0xCXNN: Random
-			uint8_t randNbr = rand() % 256;
-			chipPtr->regs[nibbles[1]] = randNbr & (instruction & 0x00ff);
+			{
+				uint8_t randNbr = rand() % 256;
+				chipPtr->regs[nibbles[1]] = randNbr & (instruction & 0x00ff);
+			}
 			break;
 		case 0xD:
 			// 0xDXYN: Display
