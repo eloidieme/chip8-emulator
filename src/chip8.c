@@ -79,12 +79,16 @@ void decodeExecute(uint16_t instruction, Chip8* chipPtr, SDL_Renderer* renderer,
 			chipPtr->pc = (instruction & 0x0fff);
 			break;
 		case 0x2:
+			// 0x2NNN: Call subroutine
 			break;
 		case 0x3:
+			// 0x3XNN: Skip if value in VX == NN
 			break;
 		case 0x4:
+			// 0x4XNN: Skip if value in VX != NN
 			break;
 		case 0x5:
+			// 0x5XY0: Skip if values in VX and VY are equal
 			break;
 		case 0x6:
 			// 0x6XNN: Set register VX
@@ -97,6 +101,7 @@ void decodeExecute(uint16_t instruction, Chip8* chipPtr, SDL_Renderer* renderer,
 		case 0x8:
 			break;
 		case 0x9:
+			// 0x9XY0: Skip if values in VX and VY are not equal
 			break;
 		case 0xA:
 			// 0xANNN: Set index register I
@@ -124,12 +129,10 @@ void decodeExecute(uint16_t instruction, Chip8* chipPtr, SDL_Renderer* renderer,
 						uint8_t spriteBit = spriteByte & (1 << (7 - i));
 						uint8_t screenBit = getScreenBit(chipPtr, x+i, y+k);
 						if (spriteBit & screenBit) {
-							// TO-DO: turn off pixel - setPixel(x, y, 0)
 							setPixel(chipPtr, renderer, texture, x+i, y+k, 0x0);
 							chipPtr->regs[0xf] = 0x0;
 						}
 						if (spriteBit & ~screenBit) {
-							// TO-DO: draw pixel at x, y - setPixel(x, y, 255)
 							setPixel(chipPtr, renderer, texture, x+i, y+k, 0xFF);
 						}
 					}

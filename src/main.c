@@ -13,6 +13,20 @@
 #include "./chip8.h"
 #include "./font.h"
 
+Uint32 timerCallback(Uint32 interval, void* param) {
+	Chip8* chip = (Chip8*)param;
+
+	if (chip->delayT > 0) {
+		chip->delayT--;
+	}
+
+	if (chip->soundT > 0) {
+		chip->soundT--;
+	}
+
+	return interval;
+}
+
 int main(int argc, char* argv[argc+1]) {
 	/* SDL Initialization */
 	if (SDL_Init(SDL_INIT_VIDEO) != 0) {
@@ -41,6 +55,12 @@ int main(int argc, char* argv[argc+1]) {
 		SDL_Quit();
 		return EXIT_FAILURE;
 	}
+	
+	/* Logging Initialization */
+	FILE* output = fopen(LOG_FNAME, "w");
+	fputs("PC,Instruction,Index,Stack,"
+		"V0,V1,V2,V3,V4,V5,V6,V7,V8,V9,"
+		"VA,VB,VC,VD,VE,VF,Delay,Sound\n", output);
 
 	/* Timing Initialization */
 	double clockRate = CLOCK_RATE_HZ;
@@ -52,14 +72,11 @@ int main(int argc, char* argv[argc+1]) {
 	/* Chip Initialization */
 	Chip8 chip = initChip(0x200);	
 	loadFont(&chip, font);
-	loadRom(&chip, "./roms/IBM.ch8");
+	loadRom(&chip, argv[1]);
 	uint16_t inst = 0x0;
 
-	/* Logging */
-	FILE* output = fopen(LOG_FNAME, "w");
-	fputs("PC,Instruction,Index,Stack,"
-		"V0,V1,V2,V3,V4,V5,V6,V7,V8,V9,"
-		"VA,VB,VC,VD,VE,VF,Delay,Sound\n", output);
+	/* SDL Timer Callback */
+	SDL_AddTimer(1000 / 60, timerCallback, &chip);
 
 	/* Main Loop */
 	SDL_bool done = SDL_FALSE;
@@ -106,6 +123,8 @@ int main(int argc, char* argv[argc+1]) {
 		SDL_RenderPresent(renderer);
 		SDL_RenderTexture(renderer, texture, NULL, NULL);
 	}
+
+	fclose(output);
 
 	/* SDL Clean-up */
 	SDL_DestroyRenderer(renderer);
