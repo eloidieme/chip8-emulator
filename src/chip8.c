@@ -3,6 +3,7 @@
 Chip8 initChip(uint16_t startingAddress) {
     Chip8 chip = {
         .ram = { 0 },
+		.screen = { 0 },
         .pc = startingAddress,
         .index = 0x0,
         .stack = initStack(0x0),
@@ -11,6 +12,36 @@ Chip8 initChip(uint16_t startingAddress) {
         .regs = { 0 }
     };
     return chip;
+}
+
+uint8_t getScreenBit(Chip8* chipPtr, uint8_t x, uint8_t y) {
+    uint8_t rowIdx = x/WORD_SIZE + y*WORD_SIZE;
+    uint8_t screenBit = chipPtr->screen[rowIdx] & (1 << (7 - (x%WORD_SIZE)));
+
+    return screenBit;
+}
+
+void setPixel(Chip8* chipPtr, SDL_Renderer* renderer, SDL_Texture* texture, uint8_t x, uint8_t y, uint8_t color) {
+    void* pixels;
+    int pitch;
+
+    if (SDL_LockTexture(texture, NULL, &pixels, &pitch) != 0) {
+        printf("SDL_LockTexture Error: %s\n", SDL_GetError());
+        return;
+    }
+
+    uint8_t* pixelPtr = (uint8_t*)pixels;
+    uint16_t pixelPosition = (y * pitch) + x;
+    pixelPtr[pixelPosition] = color;
+    SDL_UnlockTexture(texture);
+	
+	uint8_t rowIdx = x/WORD_SIZE + y*WORD_SIZE;
+
+	if (color > 128) {
+		chipPtr->screen[rowIdx] |= (1 << (7 - (x%WORD_SIZE))); 
+	} else {
+		chipPtr->screen[rowIdx] &= ~(1 << (7 - (x%WORD_SIZE)));
+	}
 }
 
 uint16_t fetch(Chip8* chipPtr) {
@@ -23,10 +54,10 @@ uint16_t fetch(Chip8* chipPtr) {
 
 void decodeExecute(uint16_t instruction, Chip8* chipPtr, SDL_Renderer* renderer, SDL_Texture* texture) {
 	uint8_t nibbles[NIBBLE_SIZE] = {
-		[0] = (instruction | 0xf000),
-		[1] = (instruction | 0x0f00),
-		[2] = (instruction | 0x00f0),
-		[3] = (instruction | 0x000f),
+		[0] = (instruction & 0xf000) >> 0xC,
+		[1] = (instruction & 0x0f00) >> 0x8,
+		[2] = (instruction & 0x00f0) >> 0x4,
+		[3] = (instruction & 0x000f) >> 0x0,
 	};
 
 	switch (nibbles[0]) {
@@ -38,14 +69,14 @@ void decodeExecute(uint16_t instruction, Chip8* chipPtr, SDL_Renderer* renderer,
                     SDL_RenderClear(renderer);
 					break;
 				case 0xE:
-                    // 0x00EE: Returning from a subroutine
+					// 0x00EE: Returning from a subroutine
 					chipPtr->pc = popStack(&(chipPtr->stack));
 					break;
 			}
 			break;
 		case 0x1:
-            // 0x1NNN: Jump
-			chipPtr->pc = (instruction | 0x0fff);
+			// 0x1NNN: Jump
+			chipPtr->pc = (instruction & 0x0fff);
 			break;
 		case 0x2:
 			break;
@@ -56,54 +87,53 @@ void decodeExecute(uint16_t instruction, Chip8* chipPtr, SDL_Renderer* renderer,
 		case 0x5:
 			break;
 		case 0x6:
-            // 0x6XNN: Set register VX
-			chipPtr->regs[nibbles[1]] = (instruction | 0x00ff);
+			// 0x6XNN: Set register VX
+			chipPtr->regs[nibbles[1]] = (instruction & 0x00ff);
 			break;
 		case 0x7:
-            // 0x7XNN: Add value to register VX
-			chipPtr->regs[nibbles[1]] += (instruction | 0x00ff);
+			// 0x7XNN: Add value to register VX
+			chipPtr->regs[nibbles[1]] += (instruction & 0x00ff);
 			break;
 		case 0x8:
 			break;
 		case 0x9:
 			break;
 		case 0xA:
-            // 0xANNN: Set index register I
-			chipPtr->index = (instruction | 0x0fff);
+			// 0xANNN: Set index register I
+			chipPtr->index = (instruction & 0x0fff);
 			break;
 		case 0xB:
 			break;
 		case 0xC:
 			break;
 		case 0xD:
-            // 0xDXYN: Display
-			uint8_t x = chipPtr->regs[nibbles[1]] & 63;
-			uint8_t y = chipPtr->regs[nibbles[2]] & 31;
-			chipPtr->regs[0xf] = 0x0;
-			for (size_t k = 0; k < nibbles[3]; ++k) {
-				if (y >= 32) {
-					break;
-				}
-				uint8_t spriteByte = chipPtr->ram[chipPtr->index + k];
-				uint8_t screenByte = 0; // TO-DO: get screen byte
-				for (int8_t i = 15; i > -1; --i) {
-					if (x >= 64) {
+			// 0xDXYN: Display
+			{
+				uint8_t x = chipPtr->regs[nibbles[1]] & 63;
+				uint8_t y = chipPtr->regs[nibbles[2]] & 31;
+				chipPtr->regs[0xf] = 0x0;
+				for (size_t k = 0; k < nibbles[3]; ++k) {
+					if (y+k >= 32) {
 						break;
 					}
-					uint8_t spriteBit = spriteByte | i;
-					uint8_t screenBit = screenByte | i;
-					if (spriteBit & screenBit) {
-						// TO-DO: turn off pixel - setPixel(x, y, 0)
-						setPixel(renderer, texture, x, y, 0x0);
-						chipPtr->regs[0xf] = 0x0;
+					uint8_t spriteByte = chipPtr->ram[chipPtr->index + k];
+					for (int8_t i = 0; i < WORD_SIZE; ++i) {
+						if (x+i >= 64) {
+							break;
+						}
+						uint8_t spriteBit = spriteByte & (1 << (7 - i));
+						uint8_t screenBit = getScreenBit(chipPtr, x+i, y+k);
+						if (spriteBit & screenBit) {
+							// TO-DO: turn off pixel - setPixel(x, y, 0)
+							setPixel(chipPtr, renderer, texture, x+i, y+k, 0x0);
+							chipPtr->regs[0xf] = 0x0;
+						}
+						if (spriteBit & ~screenBit) {
+							// TO-DO: draw pixel at x, y - setPixel(x, y, 255)
+							setPixel(chipPtr, renderer, texture, x+i, y+k, 0xFF);
+						}
 					}
-					if (spriteBit & ~screenBit) {
-						// TO-DO: draw pixel at x, y - setPixel(x, y, 255)
-						setPixel(renderer, texture, x, y, 0xFF);
-					}
-					x += 1;
 				}
-				y += 1;
 			}
 			break;
 		case 0xE:
@@ -113,4 +143,40 @@ void decodeExecute(uint16_t instruction, Chip8* chipPtr, SDL_Renderer* renderer,
 		default:
 			break;
 	}
+}
+
+int loadRom(Chip8* chip, const char* filename) {
+	FILE* rom = fopen(filename, "rb");
+	if (rom == NULL) {
+		fprintf(stderr, "Failed to open ROM: %s\n", filename);
+		return EXIT_FAILURE;
+	}
+
+	fseek(rom, 0, SEEK_END);
+	long romSize = ftell(rom);
+	rewind(rom);
+
+	uint8_t* buffer = (u_int8_t*)malloc(sizeof(uint8_t) * romSize);
+	if (buffer == NULL) {
+		fprintf(stderr, "Failed to allocate memory for ROM\n");
+		fclose(rom);
+		return EXIT_FAILURE;
+	}
+
+	size_t bytesRead = fread(buffer, sizeof(uint8_t), romSize, rom);
+	if (bytesRead != romSize) {
+		fprintf(stderr, "Failed to read ROM\n");
+		free(buffer);
+		fclose(rom);
+		return EXIT_FAILURE;
+	}
+
+	for (size_t i = 0; i < romSize; ++i) {
+		chip->ram[START_ADDRESS + i] = buffer[i];
+	}
+
+	free(buffer);
+	fclose(rom);
+
+	return EXIT_SUCCESS;
 }

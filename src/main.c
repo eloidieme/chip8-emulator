@@ -42,17 +42,42 @@ int main(int argc, char* argv[argc+1]) {
 		return EXIT_FAILURE;
 	}
 	/* Timing Initialization */
-	double clockRate = 1.0;
+	double clockRate = CLOCK_RATE_HZ;
 	struct timespec start, end;
 	uint64_t delta_us;
 	int64_t remainingTime;
 	uint64_t timeInterval = (1 / clockRate) * 1E6;
-	printf("Time int:\t%llu\n", timeInterval);
 
 	/* Chip Initialization */
 	Chip8 chip = initChip(0x200);	
 	loadFont(&chip, font);
+	loadRom(&chip, "./roms/IBM.ch8");
 	uint16_t inst = 0x0;
+
+	puts(
+		"PC\t"
+		"Instruction\t"
+		"Index\t"
+		"Stack\t"
+		"V0\t"
+		"V1\t"
+		"V2\t"
+		"V3\t"
+		"V4\t"
+		"V5\t"
+		"V6\t"
+		"V7\t"
+		"V8\t"
+		"V9\t"
+		"VA\t"
+		"VB\t"
+		"VC\t"
+		"VD\t"
+		"VE\t"
+		"VF\t"
+		"Delay\t"
+		"Sound\n"
+	);
 	
 	/* Main Loop */
 	SDL_bool done = SDL_FALSE;
@@ -65,7 +90,7 @@ int main(int argc, char* argv[argc+1]) {
 			}
 		}
 
-		printf("PC:\t%#.4x - ", chip.pc);
+		printf("%#.4x\t", chip.pc);
 
 		/* Fetch-Execute-Decode */
 		inst = fetch(&chip);
@@ -73,7 +98,20 @@ int main(int argc, char* argv[argc+1]) {
 		decodeExecute(inst, &chip, renderer, texture);
 		clock_gettime(CLOCK_MONOTONIC_RAW, &end);
 
-		printf("Instruction:\t%#.4x\n", inst);
+		printf("%#.4x\t%#.4x\t%#.4x\t",
+			inst,
+			chip.index,
+			chip.stack.content[chip.stack.top]
+		);
+
+		for (size_t k = 0; k < N_REGISTERS; ++k) {
+			printf("%.4x\t", chip.regs[k]);
+		}
+
+		printf("%#.4x\t%#.4x\n",
+			chip.delayT,
+			chip.soundT
+		);	
 
 		/* Timing Handling */
 		delta_us = (end.tv_sec - start.tv_sec) * 1E6 + (end.tv_nsec	- start.tv_nsec) / 1E3;
@@ -84,18 +122,13 @@ int main(int argc, char* argv[argc+1]) {
 
 		/* Rendering */
 		SDL_RenderPresent(renderer);
+		SDL_RenderTexture(renderer, texture, NULL, NULL);
 	}
 
 	/* SDL Clean-up */
 	SDL_DestroyRenderer(renderer);
 	SDL_DestroyWindow(window);
 	SDL_Quit();	
-
-	/*
-	for (size_t i = 0; i < RAM_SIZE; ++i) {
-		printf("%.4zu:\t%#.4x\n", i, chip.ram[i]);
-	}
-	*/
 
 	return EXIT_SUCCESS;
 }
