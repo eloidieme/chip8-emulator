@@ -80,15 +80,26 @@ void decodeExecute(uint16_t instruction, Chip8* chipPtr, SDL_Renderer* renderer,
 			break;
 		case 0x2:
 			// 0x2NNN: Call subroutine
+			pushStack(&(chipPtr->stack), chipPtr->pc);
+			chipPtr->pc = (instruction & 0x0fff);
 			break;
 		case 0x3:
 			// 0x3XNN: Skip if value in VX == NN
+			if (chipPtr->regs[nibbles[1]] == (instruction & 0x00ff)) {
+				chipPtr->pc += 0x2;
+			}
 			break;
 		case 0x4:
 			// 0x4XNN: Skip if value in VX != NN
+			if (chipPtr->regs[nibbles[1]] != (instruction & 0x00ff)) {
+				chipPtr->pc += 0x2;
+			}
 			break;
 		case 0x5:
 			// 0x5XY0: Skip if values in VX and VY are equal
+			if (chipPtr->regs[nibbles[1]] == chipPtr->regs[nibbles[2]]) {
+				chipPtr->pc += 0x2;
+			}
 			break;
 		case 0x6:
 			// 0x6XNN: Set register VX
@@ -99,17 +110,93 @@ void decodeExecute(uint16_t instruction, Chip8* chipPtr, SDL_Renderer* renderer,
 			chipPtr->regs[nibbles[1]] += (instruction & 0x00ff);
 			break;
 		case 0x8:
+			switch (nibbles[3]) {
+				case 0x0:
+					// 0x8XY0: VX is set to the value of VY
+					chipPtr->regs[nibbles[1]] = chipPtr->regs[nibbles[2]];
+					break;
+				case 0x1:
+					// 0x8XY1: VX is set to VX | VY
+					chipPtr->regs[nibbles[1]] = (chipPtr->regs[nibbles[1]] | chipPtr->regs[nibbles[2]]);
+					break;
+				case 0x2:
+					// 0x8XY2: VX is set to VX & VY
+					chipPtr->regs[nibbles[1]] = (chipPtr->regs[nibbles[1]] & chipPtr->regs[nibbles[2]]);
+					break;
+				case 0x3:
+					// 0x8XY3: VX is set to VX ^ VY
+					chipPtr->regs[nibbles[1]] = (chipPtr->regs[nibbles[1]] ^ chipPtr->regs[nibbles[2]]);
+					break;
+				case 0x4:
+					// 0x8XY4: VX is set to VX + VY
+					uint16_t result = (chipPtr->regs[nibbles[1]] + chipPtr->regs[nibbles[2]]);
+					if (result > 0xFF) {
+						chipPtr->regs[0xF] = 0x1; 
+					} else {
+						chipPtr->regs[0xF] = 0x0;
+					}
+					chipPtr->regs[nibbles[1]] = result % 0xFF; 
+					break;
+				case 0x5:
+					// 0x8XY5: VX is set to VX - VY
+					if (chipPtr->regs[nibbles[1]] >= chipPtr->regs[nibbles[2]]) {
+						chipPtr->regs[0xF] = 0x1;
+					} else {
+						chipPtr->regs[0xF] = 0x0;
+					}
+					chipPtr->regs[nibbles[1]] = (chipPtr->regs[nibbles[1]] - chipPtr->regs[nibbles[2]]);
+					break;
+				case 0x6:
+					// 0x8XY6: Shift right
+					if (ORIGINAL_SHIFT) {
+						chipPtr->regs[nibbles[1]] = chipPtr->regs[nibbles[2]];
+					}
+					uint8_t shiftedOut = chipPtr->regs[nibbles[1]] & 0x1;
+					chipPtr->regs[nibbles[1]] >>= 1;
+					chipPtr->regs[0xF] = shiftedOut;
+					break;
+				case 0x7:
+					// Ox8XY7: VX is set to VY - VX
+					if (chipPtr->regs[nibbles[2]] >= chipPtr->regs[nibbles[1]]) {
+						chipPtr->regs[0xF] = 0x1;
+					} else {
+						chipPtr->regs[0xF] = 0x0;
+					}
+					chipPtr->regs[nibbles[1]] = (chipPtr->regs[nibbles[2]] - chipPtr->regs[nibbles[1]]);
+					break;
+				case 0xE:
+					// 0x8XYE: Shift left
+					if (ORIGINAL_SHIFT) {
+						chipPtr->regs[nibbles[1]] = chipPtr->regs[nibbles[2]];
+					}
+					uint8_t shiftedOut = (chipPtr->regs[nibbles[1]] & 0x80) >> 7;
+					chipPtr->regs[nibbles[1]] <<= 1;
+					chipPtr->regs[0xF] = shiftedOut;
+					break;
+			}
 			break;
 		case 0x9:
 			// 0x9XY0: Skip if values in VX and VY are not equal
+			if (chipPtr->regs[nibbles[1]] != chipPtr->regs[nibbles[2]]) {
+				chipPtr->pc += 0x2;
+			}
 			break;
 		case 0xA:
 			// 0xANNN: Set index register I
 			chipPtr->index = (instruction & 0x0fff);
 			break;
 		case 0xB:
+			// 0xBNNN: Jump with offset
+			if (ORIGINAL_OFFSET_JUMP) {
+				chipPtr->pc = (instruction & 0x0fff) + chipPtr->regs[0];
+			} else {
+				chipPtr->pc = (instruction & 0x0fff) + chipPtr->regs[nibbles[1]];
+			}
 			break;
 		case 0xC:
+			// 0xCXNN: Random
+			uint8_t randNbr = rand() % 256;
+			chipPtr->regs[nibbles[1]] = randNbr & (instruction & 0x00ff);
 			break;
 		case 0xD:
 			// 0xDXYN: Display

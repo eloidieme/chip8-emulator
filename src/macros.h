@@ -13,6 +13,8 @@
 #define SCREEN_H 32
 #define SCREEN_W 64
 #define CLOCK_RATE_HZ 700
+#define ORIGINAL_SHIFT 1
+#define ORIGINAL_OFFSET_JUMP 1
 #define LOG_FNAME "./logs/execution.csv"
 
 #endif
