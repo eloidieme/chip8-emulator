@@ -13,5 +13,6 @@
 #define SCREEN_H 32
 #define SCREEN_W 64
 #define CLOCK_RATE_HZ 700
+#define LOG_FNAME "./logs/execution.csv"
 
 #endif

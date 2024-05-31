@@ -41,6 +41,7 @@ int main(int argc, char* argv[argc+1]) {
 		SDL_Quit();
 		return EXIT_FAILURE;
 	}
+
 	/* Timing Initialization */
 	double clockRate = CLOCK_RATE_HZ;
 	struct timespec start, end;
@@ -54,31 +55,12 @@ int main(int argc, char* argv[argc+1]) {
 	loadRom(&chip, "./roms/IBM.ch8");
 	uint16_t inst = 0x0;
 
-	puts(
-		"PC\t"
-		"Instruction\t"
-		"Index\t"
-		"Stack\t"
-		"V0\t"
-		"V1\t"
-		"V2\t"
-		"V3\t"
-		"V4\t"
-		"V5\t"
-		"V6\t"
-		"V7\t"
-		"V8\t"
-		"V9\t"
-		"VA\t"
-		"VB\t"
-		"VC\t"
-		"VD\t"
-		"VE\t"
-		"VF\t"
-		"Delay\t"
-		"Sound\n"
-	);
-	
+	/* Logging */
+	FILE* output = fopen(LOG_FNAME, "w");
+	fputs("PC,Instruction,Index,Stack,"
+		"V0,V1,V2,V3,V4,V5,V6,V7,V8,V9,"
+		"VA,VB,VC,VD,VE,VF,Delay,Sound\n", output);
+
 	/* Main Loop */
 	SDL_bool done = SDL_FALSE;
 	while (!done) {
@@ -90,7 +72,7 @@ int main(int argc, char* argv[argc+1]) {
 			}
 		}
 
-		printf("%#.4x\t", chip.pc);
+		fprintf(output, "%#.4x,", chip.pc);
 
 		/* Fetch-Execute-Decode */
 		inst = fetch(&chip);
@@ -98,17 +80,17 @@ int main(int argc, char* argv[argc+1]) {
 		decodeExecute(inst, &chip, renderer, texture);
 		clock_gettime(CLOCK_MONOTONIC_RAW, &end);
 
-		printf("%#.4x\t%#.4x\t%#.4x\t",
+		fprintf(output, "%#.4x,%#.4x,%#.4x,",
 			inst,
 			chip.index,
 			chip.stack.content[chip.stack.top]
 		);
 
 		for (size_t k = 0; k < N_REGISTERS; ++k) {
-			printf("%.4x\t", chip.regs[k]);
+			fprintf(output, "%#.4x,", chip.regs[k]);
 		}
 
-		printf("%#.4x\t%#.4x\n",
+		fprintf(output, "%#.4x,%#.4x\n",
 			chip.delayT,
 			chip.soundT
 		);	
