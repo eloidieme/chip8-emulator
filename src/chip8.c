@@ -15,13 +15,6 @@ Chip8 initChip(uint16_t startingAddress) {
     return chip;
 }
 
-uint8_t getScreenBit(Chip8* chipPtr, uint8_t x, uint8_t y) {
-    uint8_t rowIdx = x/WORD_SIZE + y*WORD_SIZE;
-    uint8_t screenBit = chipPtr->screen[rowIdx] & (1 << (7 - (x%WORD_SIZE)));
-
-    return screenBit;
-}
-
 void setPixel(Chip8* chipPtr, SDL_Renderer* renderer, SDL_Texture* texture, uint8_t x, uint8_t y, uint8_t color) {
     void* pixels;
     int pitch;
@@ -35,14 +28,6 @@ void setPixel(Chip8* chipPtr, SDL_Renderer* renderer, SDL_Texture* texture, uint
     uint16_t pixelPosition = (y * pitch) + x;
     pixelPtr[pixelPosition] = color;
     SDL_UnlockTexture(texture);
-	
-	uint8_t rowIdx = x/WORD_SIZE + y*WORD_SIZE;
-
-	if (color > 128) {
-		chipPtr->screen[rowIdx] |= (1 << (7 - (x%WORD_SIZE))); 
-	} else {
-		chipPtr->screen[rowIdx] &= ~(1 << (7 - (x%WORD_SIZE)));
-	}
 }
 
 uint16_t fetch(Chip8* chipPtr) {
@@ -222,11 +207,14 @@ void decodeExecute(uint16_t instruction, Chip8* chipPtr, SDL_Renderer* renderer,
 							break;
 						}
 						uint8_t spriteBit = spriteByte & (1 << (7 - i));
-						uint8_t screenBit = getScreenBit(chipPtr, x+i, y+k);
+						uint8_t screenBit = chipPtr->screen[(x + i) + (y + k)*SCREEN_W];
 
 						if (spriteBit & screenBit) {
 							chipPtr->regs[0xf] = 0x1;
 						}
+
+						screenBit ^= spriteBit;
+						chipPtr->screen[(x + i) + (y + k)*SCREEN_W] = screenBit;
 
 						setPixel(chipPtr, renderer, texture, x + i, y + k, spriteBit ^ screenBit ? 0xFF : 0x00);
 					}
