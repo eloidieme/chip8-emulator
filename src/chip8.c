@@ -296,7 +296,7 @@ void decodeExecute(uint16_t instruction, Chip8* chipPtr, SDL_Renderer* renderer,
 				break;
 			case 0x2:
 				// 0xFX29: Font character
-				chipPtr->index = FONT_ADDRESS + (chipPtr->regs[nibbles[1]] & 0x0f);
+				chipPtr->index = FONT_ADDRESS + 5*(chipPtr->regs[nibbles[1]] & 0x0f);
 				break;
 			case 0x3:
 				// 0xFX33: Binary-coded decimal conversion
