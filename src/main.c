@@ -34,7 +34,7 @@ int main(int argc, char* argv[argc+1]) {
 		return 1;
 	}
 
-	SDL_Window* window = SDL_CreateWindow("CHIP-8 Emulator", SCREEN_W*10, SCREEN_H*10, 0);
+	SDL_Window* window = SDL_CreateWindow("CHIP-8 Emulator", SCREEN_W*20, SCREEN_H*20, 0);
 	if (window == NULL) {
 		printf("SDL_CreateWindow Error: %s\n", SDL_GetError());
 		SDL_Quit();
@@ -70,7 +70,7 @@ int main(int argc, char* argv[argc+1]) {
 	uint64_t timeInterval = (1 / clockRate) * 1E6;
 
 	/* Chip Initialization */
-	Chip8 chip = initChip(0x200);	
+	Chip8 chip = initChip(0x200);
 	loadFont(&chip, font);
 	loadRom(&chip, argv[1]);
 	uint16_t inst = 0x0;
@@ -218,10 +218,10 @@ int main(int argc, char* argv[argc+1]) {
 		fprintf(output, "%#.4x,%#.4x\n",
 			chip.delayT,
 			chip.soundT
-		);	
+		);
 
 		/* Timing Handling */
-		delta_us = (end.tv_sec - start.tv_sec) * 1E6 + (end.tv_nsec	- start.tv_nsec) / 1E3;
+		delta_us = (end.tv_sec - start.tv_sec) * 1E6 + (end.tv_nsec- start.tv_nsec) / 1E3;
 		remainingTime = (timeInterval - delta_us);
 		if (remainingTime > 0) {
 			SDL_DelayNS(remainingTime * 1000);
@@ -237,7 +237,7 @@ int main(int argc, char* argv[argc+1]) {
 	/* SDL Clean-up */
 	SDL_DestroyRenderer(renderer);
 	SDL_DestroyWindow(window);
-	SDL_Quit();	
+	SDL_Quit();
 
 	return EXIT_SUCCESS;
 }
