@@ -300,6 +300,12 @@ void decodeExecute(uint16_t instruction, Chip8* chipPtr, SDL_Renderer* renderer,
 				break;
 			case 0x3:
 				// 0xFX33: Binary-coded decimal conversion
+				{
+					uint8_t value = chipPtr->regs[nibbles[1]];
+					chipPtr->ram[chipPtr->index] = value / 100;
+					chipPtr->ram[chipPtr->index + 1] = (value / 10) % 10;
+					chipPtr->ram[chipPtr->index + 2] = 	value % 10;
+				}
 				break;
 			case 0x5:
 				// 0xFX55: Store to memory
