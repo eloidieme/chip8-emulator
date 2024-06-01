@@ -49,7 +49,7 @@ int main(int argc, char* argv[argc+1]) {
 		return EXIT_FAILURE;
 	}
 
-	SDL_Texture* texture = SDL_CreateTexture(renderer, SDL_PIXELFORMAT_RGB332, SDL_TEXTUREACCESS_STREAMING, SCREEN_W, SCREEN_H);
+	SDL_Texture* texture = SDL_CreateTexture(renderer, SDL_PIXELFORMAT_RGBA4444, SDL_TEXTUREACCESS_STREAMING, SCREEN_W, SCREEN_H);
 	if (texture == NULL) {
 		printf("SDL_CreateTexture Error: %s\n", SDL_GetError());
 		SDL_Quit();

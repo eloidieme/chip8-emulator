@@ -15,7 +15,7 @@ Chip8 initChip(uint16_t startingAddress) {
     return chip;
 }
 
-void setPixel(Chip8* chipPtr, SDL_Renderer* renderer, SDL_Texture* texture, uint8_t x, uint8_t y, uint8_t color) {
+void setPixel(Chip8* chipPtr, SDL_Renderer* renderer, SDL_Texture* texture, uint8_t x, uint8_t y, uint16_t color) {
     void* pixels;
     int pitch;
 
@@ -24,8 +24,8 @@ void setPixel(Chip8* chipPtr, SDL_Renderer* renderer, SDL_Texture* texture, uint
         return;
     }
 
-    uint8_t* pixelPtr = (uint8_t*)pixels;
-    uint16_t pixelPosition = (y * pitch) + x;
+    uint16_t* pixelPtr = (uint16_t*)pixels;
+    uint16_t pixelPosition = (y * pitch / 2) + x;
     pixelPtr[pixelPosition] = color;
     SDL_UnlockTexture(texture);
 }
@@ -51,8 +51,11 @@ void decodeExecute(uint16_t instruction, Chip8* chipPtr, SDL_Renderer* renderer,
 			switch (nibbles[3]) {
 				case 0x0:
 					// 0x00E0: Clear screen
-                    SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
-                    SDL_RenderClear(renderer);
+					for (int y = 0; y < SCREEN_H; ++y) {
+						for (int x = 0; x < SCREEN_W; ++x) {
+							setPixel(chipPtr, renderer, texture, x, y, BCOLOR);
+						}
+					}
 					break;
 				case 0xE:
 					// 0x00EE: Returning from a subroutine
@@ -214,7 +217,7 @@ void decodeExecute(uint16_t instruction, Chip8* chipPtr, SDL_Renderer* renderer,
 						}
 						
 						uint8_t newBit = spriteBit ^ screenBit;
-						setPixel(chipPtr, renderer, texture, x + i, y + k, newBit ? 0xFF : 0x00);
+						setPixel(chipPtr, renderer, texture, x + i, y + k, newBit ? FCOLOR : BCOLOR);
 						chipPtr->screen[(x + i) + (y + k) * 64] = newBit;
 					}
 				}

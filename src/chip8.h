@@ -27,8 +27,7 @@ struct Chip8 {
 };
 
 Chip8 initChip(uint16_t startingAddress);
-uint8_t getScreenBit(Chip8* chipPtr, uint8_t x, uint8_t y);
-void setPixel(Chip8* chipPtr, SDL_Renderer* renderer, SDL_Texture* texture, uint8_t x, uint8_t y, uint8_t color);
+void setPixel(Chip8* chipPtr, SDL_Renderer* renderer, SDL_Texture* texture, uint8_t x, uint8_t y, uint16_t color);
 uint16_t fetch(Chip8* chipPtr);
 void decodeExecute(uint16_t instruction, Chip8* chipPtr, SDL_Renderer* renderer, SDL_Texture* texture); 
 int loadRom(Chip8* chip, const char* filename);
