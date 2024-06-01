@@ -34,7 +34,7 @@ int main(int argc, char* argv[argc+1]) {
 		return 1;
 	}
 
-	SDL_Window* window = SDL_CreateWindow("CHIP-8 Emulator", SCREEN_W, SCREEN_H, 0);
+	SDL_Window* window = SDL_CreateWindow("CHIP-8 Emulator", SCREEN_W*10, SCREEN_H*10, 0);
 	if (window == NULL) {
 		printf("SDL_CreateWindow Error: %s\n", SDL_GetError());
 		SDL_Quit();

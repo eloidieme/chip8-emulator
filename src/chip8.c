@@ -137,7 +137,7 @@ void decodeExecute(uint16_t instruction, Chip8* chipPtr, SDL_Renderer* renderer,
 						} else {
 							chipPtr->regs[0xF] = 0x0;
 						}
-						chipPtr->regs[nibbles[1]] = result % 0xFF;
+						chipPtr->regs[nibbles[1]] = result % 0x100;
 					}
 					break;
 				case 0x5:
@@ -211,6 +211,7 @@ void decodeExecute(uint16_t instruction, Chip8* chipPtr, SDL_Renderer* renderer,
 				uint8_t x = chipPtr->regs[nibbles[1]] & 63;
 				uint8_t y = chipPtr->regs[nibbles[2]] & 31;
 				chipPtr->regs[0xf] = 0x0;
+
 				for (size_t k = 0; k < nibbles[3]; ++k) {
 					if (y+k >= 32) {
 						break;
@@ -222,13 +223,12 @@ void decodeExecute(uint16_t instruction, Chip8* chipPtr, SDL_Renderer* renderer,
 						}
 						uint8_t spriteBit = spriteByte & (1 << (7 - i));
 						uint8_t screenBit = getScreenBit(chipPtr, x+i, y+k);
+
 						if (spriteBit & screenBit) {
-							setPixel(chipPtr, renderer, texture, x+i, y+k, 0x0);
-							chipPtr->regs[0xf] = 0x0;
+							chipPtr->regs[0xf] = 0x1;
 						}
-						if (spriteBit & ~screenBit) {
-							setPixel(chipPtr, renderer, texture, x+i, y+k, 0xFF);
-						}
+
+						setPixel(chipPtr, renderer, texture, x + i, y + k, spriteBit ^ screenBit ? 0xFF : 0x00);
 					}
 				}
 			}
