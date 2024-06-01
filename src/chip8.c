@@ -9,7 +9,8 @@ Chip8 initChip(uint16_t startingAddress) {
         .stack = initStack(0x0),
         .delayT = 0x0,
         .soundT = 0x0,
-        .regs = { 0 }
+        .regs = { 0 },
+		.keys = { 0 }
     };
     return chip;
 }
@@ -233,10 +234,103 @@ void decodeExecute(uint16_t instruction, Chip8* chipPtr, SDL_Renderer* renderer,
 			}
 			break;
 		case 0xE:
+			switch (nibbles[2]) {
+				case 0x9:
+					// 0xEX9E: Skip if key pressed
+					if (chipPtr->keys[chipPtr->regs[nibbles[1]]]) {
+						chipPtr->pc += 0x2;
+					}
+				case 0xA:
+					// 0xEXA1: Skip if key not pressed
+					if (!chipPtr->keys[chipPtr->regs[nibbles[1]]]) {
+						chipPtr->pc += 0x2;
+					}
+			}
 			break;
 		case 0xF:
+			switch (nibbles[2])
+			{
+			case 0x0:
+				switch (nibbles[3])
+				{
+				case 0x7:
+					// 0xFX07: Set delayT -> VX
+					chipPtr->regs[nibbles[1]] = chipPtr->delayT;
+					break;
+				case 0xA:
+					// 0xFX0A: Get key
+					{
+						uint8_t keyPressed = 0;
+						uint8_t keyVal = 0;
+						for (size_t k = 0; k < N_KEYS; ++k) {
+							if (chipPtr->keys[k]) {
+								keyPressed = 1;
+								keyVal = chipPtr->keys[k];
+							}
+						}
+						if (keyPressed) {
+							chipPtr->regs[nibbles[1]] = keyVal;
+						} 
+						else {
+							chipPtr->pc -= 0x2;
+						}
+					}
+					break;
+				}
+				break;
+			case 0x1:
+				switch (nibbles[3]) {
+					case 0x5:
+						// 0xFX15: Set delay timer <- VX
+						chipPtr->delayT = chipPtr->regs[nibbles[1]];
+						break;
+					case 0x8:
+						// 0xFX18: Set sound timer <- VX
+						chipPtr->soundT = chipPtr->regs[nibbles[1]];
+						break;
+					case 0xE:
+						// 0xFX1E: Set index += VX
+						chipPtr->index += chipPtr->regs[nibbles[1]];
+						break;
+				}
+				break;
+			case 0x2:
+				// 0xFX29: Font character
+				chipPtr->index = FONT_ADDRESS + (chipPtr->regs[nibbles[1]] & 0x0f);
+				break;
+			case 0x3:
+				// 0xFX33: Binary-coded decimal conversion
+				break;
+			case 0x5:
+				// 0xFX55: Store to memory
+				if (ORIGINAL_STORE_LOAD) {
+					for (size_t k = 0; k <= nibbles[1]; ++k) {
+						chipPtr->ram[chipPtr->index] = chipPtr->regs[k];
+						chipPtr->index += 1;
+					}
+				} else {
+					for (size_t k = 0; k <= nibbles[1]; ++k) {
+						chipPtr->ram[chipPtr->index + k] = chipPtr->regs[k];
+					}
+				}
+				break;
+			case 0x6:
+				// 0xFX65: Load from memory
+				if (ORIGINAL_STORE_LOAD) {
+					for (size_t k = 0; k <= nibbles[1]; ++k) {
+						chipPtr->regs[k] = chipPtr->ram[chipPtr->index];
+						chipPtr->index += 1;
+					}	
+				} else {
+					for (size_t k = 0; k <= nibbles[1]; ++k) {
+						chipPtr->regs[k] = chipPtr->ram[chipPtr->index + k];
+					}
+				}
+				break;
+			}
 			break;
 		default:
+			puts("\nUnknown Instruction\n");
 			break;
 	}
 }

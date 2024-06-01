@@ -87,6 +87,114 @@ int main(int argc, char* argv[argc+1]) {
 			if (event.type == SDL_EVENT_QUIT) {
 				done = SDL_TRUE;
 			}
+			if (event.type == SDL_EVENT_KEY_DOWN) {
+				switch (event.key.keysym.scancode) {
+					case SDL_SCANCODE_1:
+						chip.keys[0x0] = 1;
+						break;
+					case SDL_SCANCODE_2:
+						chip.keys[0x1] = 1;
+						break;
+					case SDL_SCANCODE_3:
+						chip.keys[0x2] = 1;
+						break;
+					case SDL_SCANCODE_4:
+						chip.keys[0x3] = 1;
+						break;
+					case SDL_SCANCODE_A:
+						chip.keys[0x4] = 1;
+						break;
+					case SDL_SCANCODE_Z:
+						chip.keys[0x5] = 1;
+						break;
+					case SDL_SCANCODE_E:
+						chip.keys[0x6] = 1;
+						break;
+					case SDL_SCANCODE_R:
+						chip.keys[0x7] = 1;
+						break;
+					case SDL_SCANCODE_Q:
+						chip.keys[0x8] = 1;
+						break;
+					case SDL_SCANCODE_S:
+						chip.keys[0x9] = 1;
+						break;
+					case SDL_SCANCODE_D:
+						chip.keys[0xA] = 1;
+						break;
+					case SDL_SCANCODE_F:
+						chip.keys[0xB] = 1;
+						break;
+					case SDL_SCANCODE_W:
+						chip.keys[0xC] = 1;
+						break;
+					case SDL_SCANCODE_X:
+						chip.keys[0xD] = 1;
+						break;
+					case SDL_SCANCODE_C:
+						chip.keys[0xE] = 1;
+						break;
+					case SDL_SCANCODE_V:
+						chip.keys[0xF] = 1;
+						break;
+					default:
+						break;
+				}
+			}
+			if (event.type == SDL_EVENT_KEY_UP) {
+				switch (event.key.keysym.scancode) {
+					case SDL_SCANCODE_1:
+						chip.keys[0x0] = 0;
+						break;
+					case SDL_SCANCODE_2:
+						chip.keys[0x1] = 0;
+						break;
+					case SDL_SCANCODE_3:
+						chip.keys[0x2] = 0;
+						break;
+					case SDL_SCANCODE_4:
+						chip.keys[0x3] = 0;
+						break;
+					case SDL_SCANCODE_A:
+						chip.keys[0x4] = 0;
+						break;
+					case SDL_SCANCODE_Z:
+						chip.keys[0x5] = 0;
+						break;
+					case SDL_SCANCODE_E:
+						chip.keys[0x6] = 0;
+						break;
+					case SDL_SCANCODE_R:
+						chip.keys[0x7] = 0;
+						break;
+					case SDL_SCANCODE_Q:
+						chip.keys[0x8] = 0;
+						break;
+					case SDL_SCANCODE_S:
+						chip.keys[0x9] = 0;
+						break;
+					case SDL_SCANCODE_D:
+						chip.keys[0xA] = 0;
+						break;
+					case SDL_SCANCODE_F:
+						chip.keys[0xB] = 0;
+						break;
+					case SDL_SCANCODE_W:
+						chip.keys[0xC] = 0;
+						break;
+					case SDL_SCANCODE_X:
+						chip.keys[0xD] = 0;
+						break;
+					case SDL_SCANCODE_C:
+						chip.keys[0xE] = 0;
+						break;
+					case SDL_SCANCODE_V:
+						chip.keys[0xF] = 0;
+						break;
+					default:
+						break;
+				}
+			}
 		}
 
 		fprintf(output, "%#.4x,", chip.pc);

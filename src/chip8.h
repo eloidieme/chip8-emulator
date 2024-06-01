@@ -21,8 +21,9 @@ struct Chip8 {
 	uint8_t delayT;					// Delay Timer
 	uint8_t soundT;					// Sound Timer
 
-	/* Registers */
+	/* Registers and Keypad */
 	uint8_t regs[N_REGISTERS];
+	uint8_t keys[N_KEYS];
 };
 
 Chip8 initChip(uint16_t startingAddress);
