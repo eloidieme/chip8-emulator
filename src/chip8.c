@@ -28,6 +28,13 @@ void setPixel(Chip8* chipPtr, SDL_Renderer* renderer, SDL_Texture* texture, uint
     uint16_t pixelPosition = (y * pitch) + x;
     pixelPtr[pixelPosition] = color;
     SDL_UnlockTexture(texture);
+	
+	if (color > 128) {
+		chipPtr->screen[x + y*SCREEN_W] = 0x1;
+	} else {
+		chipPtr->screen[x + y*SCREEN_W] = 0x0;
+	}
+	
 }
 
 uint16_t fetch(Chip8* chipPtr) {
@@ -212,9 +219,6 @@ void decodeExecute(uint16_t instruction, Chip8* chipPtr, SDL_Renderer* renderer,
 						if (spriteBit & screenBit) {
 							chipPtr->regs[0xf] = 0x1;
 						}
-
-						screenBit ^= spriteBit;
-						chipPtr->screen[(x + i) + (y + k)*SCREEN_W] = screenBit;
 
 						setPixel(chipPtr, renderer, texture, x + i, y + k, spriteBit ^ screenBit ? 0xFF : 0x00);
 					}

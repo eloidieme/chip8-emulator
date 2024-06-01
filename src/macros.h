@@ -3,7 +3,7 @@
 
 #define STACK_SIZE 32
 #define RAM_SIZE 4096
-#define SCREEN_SIZE 256
+#define SCREEN_SIZE 2048
 #define N_REGISTERS 16
 #define N_KEYS 16
 #define FONT_SIZE 80
